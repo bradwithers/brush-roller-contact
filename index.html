@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brush-Wafer Contact Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                border-radius: 8px;
+            }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 10px;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+                margin-bottom: 6px;
+            }
+            
+            .header p {
+                font-size: 12px;
+            }
+        }
+        
+        .controls {
+            background: #fafafa;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                padding: 15px 10px;
+            }
+            
+            .control-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                margin-bottom: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .controls {
+                padding: 10px 8px;
+            }
+            
+            .control-grid {
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+        }
+        
+        .control-group {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .control-group h3 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .input-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .input-row label {
+            font-size: 12px;
+            color: #666;
+            flex: 1;
+        }
+        
+        .input-row input, .input-row select {
+            width: 80px;
+            padding: 4px 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .control-group {
+                padding: 12px;
+            }
+            
+            .control-group h3 {
+                font-size: 13px;
+                margin-bottom: 10px;
+            }
+            
+            .input-row {
+                margin-bottom: 6px;
+            }
+            
+            .input-row label {
+                font-size: 11px;
+            }
+            
+            .input-row input, .input-row select {
+                width: 70px;
+                padding: 3px 5px;
+                font-size: 11px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .control-group {
+                padding: 10px;
+            }
+            
+            .input-row {
+                flex-direction: column;
+                align-items: stretch;
+                margin-bottom: 8px;
+            }
+            
+            .input-row label {
+                margin-bottom: 4px;
+                font-size: 12px;
+            }
+            
+            .input-row input, .input-row select {
+                width: 100%;
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 120px;
+        }
+        
+        @media (max-width: 768px) {
+            .button-group {
+                gap: 8px;
+            }
+            
+            button {
+                padding: 8px 16px;
+                font-size: 12px;
+                min-width: 100px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .button-group {
+                gap: 6px;
+                justify-content: stretch;
+            }
+            
+            button {
+                padding: 10px 8px;
+                font-size: 11px;
+                min-width: auto;
+                flex: 1;
+                text-align: center;
+            }
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #da190b;
+        }
+        
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #0b7dda;
+        }
+        
+        .display-area {
+            display: flex;
+            height: 600px;
+        }
+        
+        .graphic-panel, .animation-panel {
+            flex: 1;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .graphic-panel {
+            border-right: 1px solid #e0e0e0;
+        }
+        
+        @media (max-width: 1024px) {
+            .display-area {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .graphic-panel {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            
+            .graphic-panel, .animation-panel {
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .display-area {
+                flex-direction: column;
+            }
+            
+            .graphic-panel, .animation-panel {
+                padding: 12px 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .graphic-panel, .animation-panel {
+                padding: 10px 8px;
+            }
+        }
+        
+        .panel-title {
+            text-align: center;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        canvas {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            display: block;
+            margin: 0 auto;
+            background: white;
+            cursor: pointer;
+            max-width: 100%;
+            height: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .panel-title {
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+            
+            canvas {
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+            }
+        }
+        
+        .status {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 10px;
+            font-size: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 15px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            flex-shrink: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .status {
+                font-size: 12px;
+                margin-top: 8px;
+            }
+            
+            .legend {
+                gap: 15px;
+                font-size: 11px;
+                margin-top: 8px;
+            }
+            
+            .legend-color {
+                width: 16px;
+                height: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .legend {
+                gap: 8px;
+                font-size: 10px;
+                justify-content: space-around;
+            }
+            
+            .legend-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 3px;
+            }
+            
+            .legend-color {
+                width: 20px;
+                height: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Brush-Wafer Contact Simulator</h1>
+            <p>Model the contact patterns between a rotating cylindrical brush and wafer</p>
+        </div>
+        
+        <div class="controls">
+            <div class="control-grid">
+                <div class="control-group">
+                    <h3>Brush Properties</h3>
+                    <div class="input-row">
+                        <label>Length (mm):</label>
+                        <input type="number" id="brushLength" value="300" min="10" max="500">
+                    </div>
+                    <div class="input-row">
+                        <label>Diameter (mm):</label>
+                        <input type="number" id="brushDiameter" value="70" min="5" max="200">
+                    </div>
+                    <div class="input-row">
+                        <label>Speed (RPM):</label>
+                        <input type="number" id="brushSpeed" value="400" min="1" max="1000">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Wafer Properties</h3>
+                    <div class="input-row">
+                        <label>Speed (RPM):</label>
+                        <input type="number" id="waferSpeed" value="47" min="1" max="500">
+                    </div>
+                    <div class="input-row">
+                        <label>Diameter (mm):</label>
+                        <input type="number" id="waferDiameter" value="300" min="50" max="400">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Nodule Configuration</h3>
+                    <div class="input-row">
+                        <label>Rows:</label>
+                        <input type="number" id="noduleRows" value="8" min="1" max="20">
+                    </div>
+                    <div class="input-row">
+                        <label>Per Row:</label>
+                        <input type="number" id="nodulesPerRow" value="20" min="1" max="30">
+                    </div>
+                    <div class="input-row">
+                        <label>Pitch (mm):</label>
+                        <input type="number" id="nodulePitch" value="16" min="1" max="50">
+                    </div>
+                    <div class="input-row">
+                        <label>Diameter (mm):</label>
+                        <input type="number" id="noduleDiameter" value="8" min="0.5" max="10" step="0.1">
+                    </div>
+                    <div class="input-row">
+                        <label>Odd Rows Start (mm):</label>
+                        <input type="number" id="noduleStartOdd" value="0" min="0" max="50">
+                    </div>
+                    <div class="input-row">
+                        <label>Even Rows Start (mm):</label>
+                        <input type="number" id="noduleStartEven" value="8" min="0" max="50">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Brush Profile</h3>
+                    <div class="input-row">
+                        <label>Contour:</label>
+                        <select id="brushContour">
+                            <option value="flat" selected>Flat</option>
+                            <option value="concave">Concave</option>
+                            <option value="convex">Convex</option>
+                            <option value="taperLeft">Taper L→R</option>
+                            <option value="taperRight">Taper R→L</option>
+                            <option value="random">Random</option>
+                        </select>
+                    </div>
+                    <div class="input-row">
+                        <label>Contour Depth (mm):</label>
+                        <input type="number" id="contourDepth" value="0" min="0" max="10" step="0.1">
+                    </div>
+                    <div class="input-row">
+                        <label>Compression (mm):</label>
+                        <input type="number" id="brushCompression" value="0" min="0" max="20" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Simulation Settings</h3>
+                    <div class="input-row">
+                        <label>Data Density:</label>
+                        <select id="dataDensity">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="input-row">
+                        <label>Process Time (s):</label>
+                        <input type="number" id="processTime" value="10" min="1" max="60">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-primary" id="startBtn">Start Animation</button>
+                <button class="btn-danger" id="stopBtn">Stop Animation</button>
+                <button class="btn-secondary" id="clearBtn">Clear & Reset</button>
+                <button class="btn-secondary" id="clearHeatMapBtn">Clear Heat Map</button>
+                <button class="btn-secondary" id="clearNodulesBtn">Clear Selected Nodules</button>
+                <button class="btn-secondary" id="reverseMapBtn">Show Non-Contacted Areas</button>
+                <button class="btn-secondary" id="lowContactMapBtn">Show Low/No Contact Areas</button>
+                <button class="btn-secondary" id="exportBtn">Export Configuration</button>
+            </div>
+        </div>
+        
+        <div class="display-area">
+            <div class="animation-panel">
+                <div class="panel-title">Brush Configuration</div>
+                <canvas id="brushCanvas"></canvas>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: white; border: 2px solid #333;"></div>
+                        <span>Contacting Nodules</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffcccc; border: 2px solid #ff6666;"></div>
+                        <span>Non-Contacting</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: black;"></div>
+                        <span>Disabled Nodules</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: lightgray;"></div>
+                        <span>Brush Surface</span>
+                    </div>
+                </div>
+                
+                <!-- Nodule Detail Diagram -->
+                <div style="margin-top: 15px;">
+                    <div style="text-align: center; font-weight: 600; color: #333; margin-bottom: 10px; font-size: 14px;">
+                        Nodule Detail
+                    </div>
+                    <canvas id="detailCanvas" style="border: 1px solid #ddd;"></canvas>
+                    
+                    <!-- Gap Analysis Warning -->
+                    <div id="gapAnalysis" style="margin-top: 10px; text-align: center; min-height: 40px;">
+                        <div id="gapWarning" style="font-weight: bold; font-size: 11px; margin-bottom: 4px;"></div>
+                        <div id="gapRecommendation" style="font-size: 10px; color: #666;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="animation-panel">
+                <div class="panel-title">Contact Heat Map</div>
+                <canvas id="animationCanvas"></canvas>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgb(60,60,60);"></div>
+                        <span>No Contact</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgb(50,200,25);"></div>
+                        <span>Low Contact</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgb(200,255,0);"></div>
+                        <span>Medium Contact</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgb(255,155,0);"></div>
+                        <span>High Contact</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgb(255,50,25);"></div>
+                        <span>Very High Contact</span>
+                    </div>
+                </div>
+                <div class="status" id="animationStatus">Ready to simulate</div>
+                
+                <!-- Brush Profile Visualization -->
+                <div style="margin-top: 15px;">
+                    <div style="text-align: center; font-weight: 600; color: #333; margin-bottom: 10px; font-size: 14px;">
+                        Brush Profile
+                    </div>
+                    <canvas id="profileCanvas" style="border: 1px solid #ddd; border-radius: 4px;"></canvas>
+                    <div style="text-align: center; margin-top: 8px; font-size: 12px; color: #666;">
+                        <span id="profileInfo">Flat Profile</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; padding: 15px; border-top: 1px solid #e0e0e0; background: #f8f9fa; color: #666; font-size: 12px; margin-top: 0;">
+            © 2025 LycheeByte LLC
+        </div>
+    </div>
+
+    <style>
+        /* Additional responsive styles */
+        @media (max-width: 768px) {
+            .display-area > div:last-child {
+                border-top: 1px solid #e0e0e0;
+            }
+            
+            /* Improve touch targets for mobile */
+            canvas {
+                touch-action: manipulation;
+            }
+            
+            /* Footer responsive */
+            .container > div:last-child {
+                padding: 12px 10px;
+                font-size: 11px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* Smaller margins and padding for very small screens */
+            .legend-item span {
+                font-size: 9px;
+            }
+            
+            .panel-title {
+                font-size: 13px;
+            }
+            
+            /* Make sure text in detail diagrams scales */
+            #gapWarning {
+                font-size: 10px !important;
+            }
+            
+            #gapRecommendation {
+                font-size: 9px !important;
+            }
+        }
+        
+        /* Ensure no horizontal scrolling */
+        * {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Smooth transitions for orientation changes */
+        .container, .display-area, canvas {
+            transition: all 0.3s ease;
+        }
+    </style>
+
+    <script>
+        class BrushWaferSimulator {
+            constructor() {
+                this.brushCanvas = document.getElementById('brushCanvas');
+                this.brushCtx = this.brushCanvas.getContext('2d');
+                this.detailCanvas = document.getElementById('detailCanvas');
+                this.detailCtx = this.detailCanvas.getContext('2d');
+                this.animationCanvas = document.getElementById('animationCanvas');
+                this.animationCtx = this.animationCanvas.getContext('2d');
+                this.profileCanvas = document.getElementById('profileCanvas');
+                this.profileCtx = this.profileCanvas.getContext('2d');
+                
+                this.isAnimating = false;
+                this.animationId = null;
+                this.startTime = null;
+                this.contactData = null;
+                this.selectedNodules = new Set(); // Track selected (disabled) nodules
+                this.currentNodules = []; // Store current nodule data for click detection
+                
+                this.setupResponsiveCanvases();
+                this.setupEventListeners();
+                this.updateBrushVisualization();
+                this.updateDetailDiagram();
+                this.updateProfileDiagram();
+                this.initializeContactMap();
+            }
+            
+            setupResponsiveCanvases() {
+                // Set canvas sizes based on screen width
+                const isMobile = window.innerWidth <= 768;
+                const isSmallMobile = window.innerWidth <= 480;
+                
+                if (isSmallMobile) {
+                    // Small mobile screens
+                    this.brushCanvas.width = 320;
+                    this.brushCanvas.height = 240;
+                    this.detailCanvas.width = 320;
+                    this.detailCanvas.height = 100;
+                    this.animationCanvas.width = 320;
+                    this.animationCanvas.height = 320;
+                    this.profileCanvas.width = 320;
+                    this.profileCanvas.height = 80;
+                } else if (isMobile) {
+                    // Mobile screens
+                    this.brushCanvas.width = 360;
+                    this.brushCanvas.height = 270;
+                    this.detailCanvas.width = 360;
+                    this.detailCanvas.height = 110;
+                    this.animationCanvas.width = 360;
+                    this.animationCanvas.height = 360;
+                    this.profileCanvas.width = 360;
+                    this.profileCanvas.height = 90;
+                } else {
+                    // Desktop screens (original sizes)
+                    this.brushCanvas.width = 400;
+                    this.brushCanvas.height = 300;
+                    this.detailCanvas.width = 400;
+                    this.detailCanvas.height = 120;
+                    this.animationCanvas.width = 400;
+                    this.animationCanvas.height = 400;
+                    this.profileCanvas.width = 400;
+                    this.profileCanvas.height = 100;
+                }
+                
+                // Add resize listener to handle orientation changes
+                window.addEventListener('resize', () => {
+                    clearTimeout(this.resizeTimer);
+                    this.resizeTimer = setTimeout(() => {
+                        this.setupResponsiveCanvases();
+                        this.updateBrushVisualization();
+                        this.updateDetailDiagram();
+                        this.updateProfileDiagram();
+                        if (this.contactData) {
+                            this.drawWafer(0);
+                        }
+                    }, 250);
+                });
+            }
+            
+            setupEventListeners() {
+                // Input change listeners
+                const inputs = ['brushLength', 'brushDiameter', 'brushSpeed', 'waferSpeed', 
+                               'noduleRows', 'nodulesPerRow', 'nodulePitch', 'noduleDiameter', 
+                               'noduleStartOdd', 'noduleStartEven', 'brushContour', 'contourDepth', 
+                               'brushCompression', 'dataDensity', 'processTime'];
+                
+                inputs.forEach(id => {
+                    document.getElementById(id).addEventListener('input', () => {
+                        this.updateBrushVisualization();
+                        this.updateDetailDiagram();
+                        this.updateProfileDiagram();
+                        if (!this.isAnimating) {
+                            this.initializeContactMap();
+                        }
+                    });
+                });
+                
+                // Button listeners
+                document.getElementById('startBtn').addEventListener('click', () => this.startAnimation());
+                document.getElementById('stopBtn').addEventListener('click', () => this.stopAnimation());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearAndReset());
+                document.getElementById('clearHeatMapBtn').addEventListener('click', () => this.clearHeatMap());
+                document.getElementById('clearNodulesBtn').addEventListener('click', () => this.clearSelectedNodules());
+                document.getElementById('reverseMapBtn').addEventListener('click', () => this.showNonContactedAreas());
+                document.getElementById('lowContactMapBtn').addEventListener('click', () => this.showLowContactAreas());
+                document.getElementById('exportBtn').addEventListener('click', () => this.exportConfiguration());
+                
+                // Canvas click listener for nodule selection
+                this.brushCanvas.addEventListener('click', (e) => this.handleBrushCanvasClick(e));
+            }
+            
+            getInputValues() {
+                return {
+                    brushLength: parseFloat(document.getElementById('brushLength').value),
+                    brushDiameter: parseFloat(document.getElementById('brushDiameter').value),
+                    brushSpeed: parseFloat(document.getElementById('brushSpeed').value),
+                    waferSpeed: parseFloat(document.getElementById('waferSpeed').value),
+                    waferDiameter: parseFloat(document.getElementById('waferDiameter').value),
+                    noduleRows: parseInt(document.getElementById('noduleRows').value),
+                    nodulesPerRow: parseInt(document.getElementById('nodulesPerRow').value),
+                    nodulePitch: parseFloat(document.getElementById('nodulePitch').value),
+                    noduleDiameter: parseFloat(document.getElementById('noduleDiameter').value),
+                    noduleStartOdd: parseFloat(document.getElementById('noduleStartOdd').value),
+                    noduleStartEven: parseFloat(document.getElementById('noduleStartEven').value),
+                    brushContour: document.getElementById('brushContour').value,
+                    contourDepth: parseFloat(document.getElementById('contourDepth').value),
+                    brushCompression: parseFloat(document.getElementById('brushCompression').value),
+                    dataDensity: document.getElementById('dataDensity').value,
+                    processTime: parseFloat(document.getElementById('processTime').value)
+                };
+            }
+            
+            updateBrushVisualization() {
+                const params = this.getInputValues();
+                const ctx = this.brushCtx;
+                const canvas = this.brushCanvas;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Calculate dimensions
+                const margin = 20;
+                const rectWidth = canvas.width - 2 * margin;
+                const rectHeight = canvas.height - 2 * margin;
+                const circumference = Math.PI * params.brushDiameter;
+                
+                // Draw brush surface (light gray)
+                ctx.fillStyle = 'lightgray';
+                ctx.fillRect(margin, margin, rectWidth, rectHeight);
+                
+                // Draw border
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(margin, margin, rectWidth, rectHeight);
+                
+                // Calculate nodule positions
+                const nodules = this.calculateNodulePositions(params);
+                this.currentNodules = []; // Reset stored nodule data
+                
+                // Draw nodules with individual colors based on selection state and contact ability
+                nodules.forEach(nodule => {
+                    const x = margin + (nodule.axialPos / params.brushLength) * rectWidth;
+                    const y = margin + (nodule.circumPos / circumference) * rectHeight;
+                    const radius = (params.noduleDiameter / 2) * (rectWidth / params.brushLength);
+                    
+                    // Create unique ID for nodule
+                    const noduleId = `${nodule.row}-${nodule.index}`;
+                    
+                    // Store nodule info for click detection
+                    this.currentNodules.push({
+                        id: noduleId,
+                        x: x,
+                        y: y,
+                        radius: Math.max(radius, 2),
+                        row: nodule.row,
+                        index: nodule.index
+                    });
+                    
+                    // Determine if nodule can make contact based on compression
+                    const canMakeContact = this.canNoduleContact(nodule, params);
+                    
+                    // Choose color based on selection state and contact ability
+                    let fillColor, strokeColor;
+                    if (this.selectedNodules.has(noduleId)) {
+                        fillColor = 'black';
+                        strokeColor = '#333';
+                    } else if (!canMakeContact) {
+                        fillColor = '#ffcccc'; // Light red for non-contacting
+                        strokeColor = '#ff6666';
+                    } else {
+                        fillColor = 'white';
+                        strokeColor = '#333';
+                    }
+                    
+                    ctx.fillStyle = fillColor;
+                    ctx.strokeStyle = strokeColor;
+                    ctx.lineWidth = 1;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, Math.max(radius, 2), 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.stroke();
+                });
+                
+                // Add labels
+                ctx.fillStyle = '#666';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Length: ${params.brushLength}mm`, canvas.width / 2, margin - 5);
+                
+                ctx.save();
+                ctx.translate(margin - 5, canvas.height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText(`Circumference: ${circumference.toFixed(1)}mm`, 0, 0);
+                ctx.restore();
+            }
+            
+            calculateNodulePositions(params) {
+                const nodules = [];
+                const circumference = Math.PI * params.brushDiameter;
+                
+                // Nodule rows run along the length of the brush
+                for (let row = 0; row < params.noduleRows; row++) {
+                    // Each row is at a different circumferential position
+                    const circumPos = (row / params.noduleRows) * circumference;
+                    const angle = (row / params.noduleRows) * 2 * Math.PI;
+                    
+                    // Determine start position based on whether row is odd or even
+                    // Row numbering: 0=odd(1st), 1=even(2nd), 2=odd(3rd), 3=even(4th), etc.
+                    const startPos = (row % 2 === 0) ? params.noduleStartOdd : params.noduleStartEven;
+                    
+                    // Nodules in each row are spaced along the length
+                    for (let i = 0; i < params.nodulesPerRow; i++) {
+                        const axialPos = startPos + i * params.nodulePitch;
+                        
+                        if (axialPos <= params.brushLength) {
+                            // Calculate brush surface height at this axial position
+                            const surfaceHeight = this.calculateBrushSurfaceHeight(axialPos, params);
+                            
+                            nodules.push({
+                                axialPos: axialPos,
+                                circumPos: circumPos,
+                                angle: angle,
+                                row: row,
+                                index: i,
+                                surfaceHeight: surfaceHeight
+                            });
+                        }
+                    }
+                }
+                
+                return nodules;
+            }
+            
+            canNoduleContact(nodule, params) {
+                // Find the maximum surface height (tallest point on brush)
+                const allNodules = this.calculateNodulePositions(params);
+                const maxSurfaceHeight = Math.max(...allNodules.map(n => n.surfaceHeight));
+                
+                // For concave/convex profiles, we need to reverse the contact logic
+                // because the visual display and contact behavior work in opposite directions
+                let effectiveHeight = nodule.surfaceHeight;
+                if (params.brushContour === 'concave' || params.brushContour === 'convex') {
+                    // Flip the height for contact calculation only
+                    effectiveHeight = -nodule.surfaceHeight;
+                    const flippedMaxHeight = Math.max(...allNodules.map(n => -n.surfaceHeight));
+                    const heightDifference = flippedMaxHeight - effectiveHeight;
+                    return params.brushCompression >= heightDifference;
+                } else {
+                    // For tapers and flat, use normal logic
+                    const heightDifference = maxSurfaceHeight - nodule.surfaceHeight;
+                    return params.brushCompression >= heightDifference;
+                }
+            }
+            
+            updateProfileDiagram() {
+                const params = this.getInputValues();
+                const ctx = this.profileCtx;
+                const canvas = this.profileCanvas;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const margin = 30;
+                const diagramWidth = canvas.width - 2 * margin;
+                const diagramHeight = canvas.height - 2 * margin;
+                const centerY = canvas.height / 2;
+                
+                // Draw baseline (nominal brush surface)
+                ctx.strokeStyle = '#ddd';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.moveTo(margin, centerY);
+                ctx.lineTo(margin + diagramWidth, centerY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Draw profile curve
+                ctx.strokeStyle = '#2196F3';
+                ctx.lineWidth = 3;
+                ctx.fillStyle = 'rgba(33, 150, 243, 0.1)';
+                
+                ctx.beginPath();
+                let isFirstPoint = true;
+                
+                for (let x = 0; x <= diagramWidth; x += 2) {
+                    const normalizedPos = x / diagramWidth;
+                    const axialPos = normalizedPos * params.brushLength;
+                    const height = this.calculateBrushSurfaceHeight(axialPos, params);
+                    
+                    // Reverse the display for tapers and random to match visual expectation
+                    let displayHeight = height;
+                    if (params.brushContour === 'taperLeft' || params.brushContour === 'taperRight' || params.brushContour === 'random') {
+                        displayHeight = -height; // Flip the visual representation
+                    }
+                    
+                    // Scale height for display (exaggerate for visibility)
+                    const scaledHeight = (displayHeight / Math.max(params.contourDepth, 0.1)) * (diagramHeight / 3);
+                    const y = centerY - scaledHeight;
+                    
+                    if (isFirstPoint) {
+                        ctx.moveTo(margin + x, y);
+                        isFirstPoint = false;
+                    } else {
+                        ctx.lineTo(margin + x, y);
+                    }
+                }
+                
+                // Fill area under curve
+                ctx.lineTo(margin + diagramWidth, centerY);
+                ctx.lineTo(margin, centerY);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Draw curve outline
+                ctx.beginPath();
+                isFirstPoint = true;
+                for (let x = 0; x <= diagramWidth; x += 2) {
+                    const normalizedPos = x / diagramWidth;
+                    const axialPos = normalizedPos * params.brushLength;
+                    const height = this.calculateBrushSurfaceHeight(axialPos, params);
+                    
+                    // Reverse the display for tapers and random to match visual expectation
+                    let displayHeight = height;
+                    if (params.brushContour === 'taperLeft' || params.brushContour === 'taperRight' || params.brushContour === 'random') {
+                        displayHeight = -height; // Flip the visual representation
+                    }
+                    
+                    const scaledHeight = (displayHeight / Math.max(params.contourDepth, 0.1)) * (diagramHeight / 3);
+                    const y = centerY - scaledHeight;
+                    
+                    if (isFirstPoint) {
+                        ctx.moveTo(margin + x, y);
+                        isFirstPoint = false;
+                    } else {
+                        ctx.lineTo(margin + x, y);
+                    }
+                }
+                ctx.stroke();
+                
+                // Draw wafer surface line (compression line)
+                // At 0mm compression, wafer surface should just touch the lowest point of brush
+                const allNodules = this.calculateNodulePositions(params);
+                const minSurfaceHeight = Math.min(...allNodules.map(n => n.surfaceHeight));
+                
+                // Wafer surface starts at lowest point, moves up with compression
+                const waferSurfaceHeight = minSurfaceHeight + params.brushCompression;
+                
+                // For the VISUAL display only, apply transformations to match brush profile display
+                let displayWaferHeight = waferSurfaceHeight;
+                if (params.brushContour === 'taperLeft' || params.brushContour === 'taperRight') {
+                    // For tapers, adjust the starting position to be below the contour
+                    displayWaferHeight = waferSurfaceHeight - (params.contourDepth || 1);
+                }
+                
+                const scaledWaferHeight = (displayWaferHeight / Math.max(params.contourDepth, 0.1)) * (diagramHeight / 3);
+                const waferY = centerY - scaledWaferHeight;
+                
+                ctx.strokeStyle = '#ff6666';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(margin, waferY);
+                ctx.lineTo(margin + diagramWidth, waferY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Label wafer surface line
+                ctx.fillStyle = '#ff6666';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'right';
+                if (params.brushCompression === 0) {
+                    ctx.fillText(`Wafer Surface (No compression)`, margin + diagramWidth - 5, waferY - 5);
+                } else {
+                    ctx.fillText(`Wafer Surface (${params.brushCompression}mm compression)`, margin + diagramWidth - 5, waferY - 5);
+                }
+                
+                // Add labels
+                ctx.fillStyle = '#666';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText('0mm', margin, canvas.height - 5);
+                ctx.textAlign = 'right';
+                ctx.fillText(`${params.brushLength}mm`, margin + diagramWidth, canvas.height - 5);
+                ctx.textAlign = 'center';
+                ctx.fillText('Brush Length', margin + diagramWidth / 2, canvas.height - 5);
+                
+                // Update profile info text
+                const contourNames = {
+                    'flat': 'Flat Profile',
+                    'concave': `Concave Profile (${params.contourDepth}mm depth)`,
+                    'convex': `Convex Profile (${params.contourDepth}mm height)`,
+                    'taperLeft': `Left Taper (${params.contourDepth}mm rise)`,
+                    'taperRight': `Right Taper (${params.contourDepth}mm rise)`,
+                    'random': `Random Profile (±${params.contourDepth}mm variation)`
+                };
+                
+                document.getElementById('profileInfo').textContent = contourNames[params.brushContour] || 'Unknown Profile';
+            }
+            
+            calculateBrushSurfaceHeight(axialPos, params) {
+                // Use full brush length for taper calculations
+                const normalizedPos = axialPos / params.brushLength; // 0 to 1 across entire brush
+                let heightVariation = 0;
+                
+                switch (params.brushContour) {
+                    case 'flat':
+                        heightVariation = 0;
+                        break;
+                    case 'concave':
+                        // Concave: higher at ends, lower in center (edges contact first)
+                        heightVariation = params.contourDepth * (1 - 4 * Math.pow(normalizedPos - 0.5, 2));
+                        break;
+                    case 'convex':
+                        // Convex: higher in center, lower at ends (center contacts first)
+                        heightVariation = -params.contourDepth * (1 - 4 * Math.pow(normalizedPos - 0.5, 2));
+                        break;
+                    case 'taperLeft':
+                        // Linear taper from left (low) to right (high) - right side contacts first
+                        // Use full brush length: 0mm = low end, brushLength = high end
+                        heightVariation = params.contourDepth * normalizedPos;
+                        break;
+                    case 'taperRight':
+                        // Linear taper from right (low) to left (high) - left side contacts first  
+                        // Use full brush length: 0mm = high end, brushLength = low end
+                        heightVariation = params.contourDepth * (1 - normalizedPos);
+                        break;
+                    case 'random':
+                        // Pseudo-random based on position (deterministic)
+                        const seed = Math.sin(normalizedPos * 17.3) * Math.cos(normalizedPos * 23.7);
+                        heightVariation = params.contourDepth * seed;
+                        break;
+                    default:
+                        heightVariation = 0;
+                }
+                
+                return heightVariation;
+            }
+            
+            updateDetailDiagram() {
+                const params = this.getInputValues();
+                const ctx = this.detailCtx;
+                const canvas = this.detailCanvas;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Set up dimensions and scaling
+                const margin = 40;
+                const diagramWidth = canvas.width - 2 * margin;
+                const diagramHeight = canvas.height - 2 * margin;
+                
+                // Calculate scale to fit two nodules with pitch spacing
+                const totalLength = params.nodulePitch * 1.5; // Show 1.5 pitch lengths
+                const scale = diagramWidth / totalLength;
+                
+                // Draw two rows (top and bottom)
+                const rowHeight = diagramHeight / 3;
+                const row1Y = margin + rowHeight * 0.5;
+                const row2Y = margin + rowHeight * 2;
+                
+                // Row 1 nodules (odd row)
+                const oddStart = params.noduleStartOdd * scale + margin;
+                const nodule1X = oddStart;
+                const nodule2X = oddStart + params.nodulePitch * scale;
+                
+                // Row 2 nodules (even row) 
+                const evenStart = params.noduleStartEven * scale + margin;
+                const nodule3X = evenStart;
+                const nodule4X = evenStart + params.nodulePitch * scale;
+                
+                const noduleRadius = Math.max(2, params.noduleDiameter * scale / 2); // Scale with actual diameter, minimum 2px
+                
+                // Draw brush surface background
+                ctx.fillStyle = 'lightgray';
+                ctx.fillRect(margin, margin, diagramWidth, diagramHeight);
+                ctx.strokeStyle = '#999';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(margin, margin, diagramWidth, diagramHeight);
+                
+                // Draw row divider
+                ctx.strokeStyle = '#bbb';
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.moveTo(margin, margin + diagramHeight / 2);
+                ctx.lineTo(margin + diagramWidth, margin + diagramHeight / 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Draw nodules
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1;
+                
+                // Row 1 nodules
+                if (nodule1X < margin + diagramWidth) {
+                    ctx.beginPath();
+                    ctx.arc(nodule1X, row1Y, noduleRadius, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                
+                if (nodule2X < margin + diagramWidth) {
+                    ctx.beginPath();
+                    ctx.arc(nodule2X, row1Y, noduleRadius, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                
+                // Row 2 nodules
+                if (nodule3X < margin + diagramWidth) {
+                    ctx.beginPath();
+                    ctx.arc(nodule3X, row2Y, noduleRadius, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                
+                if (nodule4X < margin + diagramWidth) {
+                    ctx.beginPath();
+                    ctx.arc(nodule4X, row2Y, noduleRadius, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                
+                // Draw dimension lines and labels
+                ctx.strokeStyle = 'red';
+                ctx.fillStyle = 'red';
+                ctx.lineWidth = 1;
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                
+                // Nodule pitch dimension (between nodules in same row)
+                if (nodule1X < margin + diagramWidth && nodule2X < margin + diagramWidth) {
+                    const dimY = row1Y - 15;
+                    ctx.beginPath();
+                    ctx.moveTo(nodule1X, dimY);
+                    ctx.lineTo(nodule2X, dimY);
+                    ctx.stroke();
+                    
+                    // Dimension arrows
+                    ctx.beginPath();
+                    ctx.moveTo(nodule1X, dimY - 3);
+                    ctx.lineTo(nodule1X, dimY + 3);
+                    ctx.moveTo(nodule2X, dimY - 3);
+                    ctx.lineTo(nodule2X, dimY + 3);
+                    ctx.stroke();
+                    
+                    ctx.fillText(`Pitch: ${params.nodulePitch}mm`, (nodule1X + nodule2X) / 2, dimY - 6);
+                }
+                
+                // Start position offset dimension
+                const dimY = margin + diagramHeight + 15;
+                ctx.beginPath();
+                ctx.moveTo(margin, dimY);
+                ctx.lineTo(nodule3X, dimY);
+                ctx.stroke();
+                
+                // Dimension arrows
+                ctx.beginPath();
+                ctx.moveTo(margin, dimY - 3);
+                ctx.lineTo(margin, dimY + 3);
+                ctx.moveTo(nodule3X, dimY - 3);
+                ctx.lineTo(nodule3X, dimY + 3);
+                ctx.stroke();
+                
+                ctx.fillText(`Even Start: ${params.noduleStartEven}mm`, (margin + nodule3X) / 2, dimY + 12);
+                
+                // Row-to-row overlap dimension (between closest nodules from different rows)
+                if (nodule1X < margin + diagramWidth && nodule3X < margin + diagramWidth) {
+                    const midY = (row1Y + row2Y) / 2;
+                    
+                    ctx.strokeStyle = 'purple';
+                    ctx.fillStyle = 'purple';
+                    ctx.lineWidth = 1;
+                    
+                    // Calculate the actual overlap between nodule edges
+                    // Find the closest nodules from each row
+                    const oddNodeX = nodule1X; // First nodule in odd row
+                    const evenNodeX = nodule3X; // First nodule in even row
+                    
+                    let overlapDistance;
+                    let dimStartX, dimEndX;
+                    
+                    if (evenNodeX > oddNodeX) {
+                        // Even row starts after odd row
+                        dimStartX = oddNodeX + noduleRadius; // Right edge of odd nodule
+                        dimEndX = evenNodeX - noduleRadius; // Left edge of even nodule
+                        overlapDistance = dimEndX - dimStartX;
+                    } else {
+                        // Odd row starts after even row
+                        dimStartX = evenNodeX + noduleRadius; // Right edge of even nodule
+                        dimEndX = oddNodeX - noduleRadius; // Left edge of odd nodule
+                        overlapDistance = dimEndX - dimStartX;
+                    }
+                    
+                    // Draw dimension line between nodule edges
+                    ctx.beginPath();
+                    ctx.moveTo(dimStartX, midY);
+                    ctx.lineTo(dimEndX, midY);
+                    ctx.stroke();
+                    
+                    // Dimension arrows
+                    ctx.beginPath();
+                    ctx.moveTo(dimStartX, midY - 3);
+                    ctx.lineTo(dimStartX, midY + 3);
+                    ctx.moveTo(dimEndX, midY - 3);
+                    ctx.lineTo(dimEndX, midY + 3);
+                    ctx.stroke();
+                    
+                    // Scale back to real dimensions
+                    const realOverlapDistance = overlapDistance / scale;
+                    
+                    ctx.textAlign = 'center';
+                    const label = realOverlapDistance >= 0 ? `Gap: ${realOverlapDistance.toFixed(1)}mm` : `Overlap: ${Math.abs(realOverlapDistance).toFixed(1)}mm`;
+                    ctx.fillText(label, (dimStartX + dimEndX) / 2, midY - 6);
+                }
+                
+                // Nodule diameter
+                if (nodule1X < margin + diagramWidth) {
+                    ctx.strokeStyle = 'blue';
+                    ctx.fillStyle = 'blue';
+                    ctx.beginPath();
+                    ctx.moveTo(nodule1X - noduleRadius, row1Y + 20);
+                    ctx.lineTo(nodule1X + noduleRadius, row1Y + 20);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(nodule1X - noduleRadius, row1Y + 17);
+                    ctx.lineTo(nodule1X - noduleRadius, row1Y + 23);
+                    ctx.moveTo(nodule1X + noduleRadius, row1Y + 17);
+                    ctx.lineTo(nodule1X + noduleRadius, row1Y + 23);
+                    ctx.stroke();
+                    
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`Ø${params.noduleDiameter}mm`, nodule1X, row1Y + 10);
+                }
+                
+                // Update gap analysis in separate area
+                this.updateGapAnalysis(params);
+            }
+            
+            updateGapAnalysis(params) {
+                // Simple and direct gap analysis
+                const startOffset = Math.abs(params.noduleStartEven - params.noduleStartOdd);
+                const noduleDiameter = params.noduleDiameter;
+                
+                // Calculate the effective gap between nodule edges at start positions
+                const edgeToEdgeGap = startOffset - noduleDiameter;
+                
+                // Also check if pitch creates gaps between subsequent nodules
+                let pitchGap = 0;
+                if (params.nodulesPerRow > 1) {
+                    // For a staggered pattern, worst case is when nodules are most offset
+                    const maxOffset = Math.max(startOffset, params.nodulePitch - startOffset);
+                    pitchGap = maxOffset - noduleDiameter;
+                }
+                
+                // Use the worst (largest) gap
+                const worstGap = Math.max(edgeToEdgeGap, pitchGap);
+                const hasGaps = worstGap > 0;
+                
+                // Update warning text
+                const warningElement = document.getElementById('gapWarning');
+                const recommendationElement = document.getElementById('gapRecommendation');
+                
+                let warningText = '';
+                let warningColor = '';
+                
+                if (hasGaps) {
+                    warningText = `⚠️ Gap Warning: ${worstGap.toFixed(1)}mm gaps between adjacent rows may create non-contacted areas`;
+                    warningColor = '#ff6600';
+                } else {
+                    warningText = '✓ Good Coverage: Nodules overlap - no gaps expected';
+                    warningColor = '#008000';
+                }
+                
+                warningElement.textContent = warningText;
+                warningElement.style.color = warningColor;
+                
+                // Clear any previous recommendation
+                recommendationElement.textContent = '';
+            }
+            
+            initializeContactMap() {
+                const params = this.getInputValues();
+                const ctx = this.animationCtx;
+                const canvas = this.animationCanvas;
+                
+                // Initialize contact data array
+                const resolution = this.getResolution(params.dataDensity);
+                this.contactData = Array(resolution).fill(0).map(() => Array(resolution).fill(0));
+                
+                // Clear canvas and draw initial wafer
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                this.drawWafer(0);
+            }
+            
+            getResolution(density) {
+                switch(density) {
+                    case 'low': return 50;
+                    case 'medium': return 100;
+                    case 'high': return 200;
+                    default: return 100;
+                }
+            }
+            
+            drawWafer(elapsedTime) {
+                const params = this.getInputValues();
+                const ctx = this.animationCtx;
+                const canvas = this.animationCanvas;
+                
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const waferRadius = Math.min(centerX, centerY) - 10;
+                const resolution = this.contactData.length;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw heat map
+                for (let i = 0; i < resolution; i++) {
+                    for (let j = 0; j < resolution; j++) {
+                        const x = (i / resolution) * canvas.width;
+                        const y = (j / resolution) * canvas.height;
+                        
+                        // Check if point is within wafer circle
+                        const dx = x - centerX;
+                        const dy = y - centerY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance <= waferRadius) {
+                            const contactValue = this.contactData[i][j];
+                            const intensity = Math.min(contactValue / 15, 1); // Adjusted normalization for better range
+                            
+                            // Enhanced color mapping with more variation
+                            let r, g, b;
+                            if (intensity === 0) {
+                                // No contact - dark grey
+                                r = 60; g = 60; b = 60;
+                            } else if (intensity < 0.2) {
+                                // Very low contact - green to light green
+                                const t = intensity / 0.2;
+                                r = Math.floor(t * 50);
+                                g = Math.floor(150 + t * 105);
+                                b = Math.floor(t * 50);
+                            } else if (intensity < 0.4) {
+                                // Low contact - light green to yellow-green
+                                const t = (intensity - 0.2) / 0.2;
+                                r = Math.floor(50 + t * 100);
+                                g = 255;
+                                b = Math.floor(50 - t * 50);
+                            } else if (intensity < 0.6) {
+                                // Medium contact - yellow-green to yellow
+                                const t = (intensity - 0.4) / 0.2;
+                                r = Math.floor(150 + t * 105);
+                                g = 255;
+                                b = 0;
+                            } else if (intensity < 0.8) {
+                                // High contact - yellow to orange
+                                const t = (intensity - 0.6) / 0.2;
+                                r = 255;
+                                g = Math.floor(255 - t * 100);
+                                b = 0;
+                            } else {
+                                // Very high contact - orange to red
+                                const t = (intensity - 0.8) / 0.2;
+                                r = 255;
+                                g = Math.floor(155 - t * 155);
+                                b = Math.floor(t * 50);
+                            }
+                            
+                            ctx.fillStyle = `rgb(${r},${g},${b})`;
+                            const pixelSize = canvas.width / resolution;
+                            ctx.fillRect(x - pixelSize/2, y - pixelSize/2, pixelSize, pixelSize);
+                        }
+                    }
+                }
+                
+                // Draw wafer outline
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, waferRadius, 0, 2 * Math.PI);
+                ctx.stroke();
+                
+                // Update status
+                document.getElementById('animationStatus').textContent = 
+                    this.isAnimating ? `Running... ${elapsedTime.toFixed(1)}s` : 'Simulation complete';
+            }
+            
+            startAnimation() {
+                if (this.isAnimating) return;
+                
+                this.isAnimating = true;
+                this.startTime = performance.now();
+                this.initializeContactMap();
+                
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('animationStatus').textContent = 'Starting simulation...';
+                
+                this.animate();
+            }
+            
+            animate() {
+                if (!this.isAnimating) return;
+                
+                const currentTime = performance.now();
+                const elapsedTime = (currentTime - this.startTime) / 1000;
+                const params = this.getInputValues();
+                
+                if (elapsedTime >= params.processTime) {
+                    this.stopAnimation();
+                    return;
+                }
+                
+                // Update contact data based on brush and wafer positions
+                this.updateContactData(elapsedTime);
+                
+                // Draw current state
+                this.drawWafer(elapsedTime);
+                
+                this.animationId = requestAnimationFrame(() => this.animate());
+            }
+            
+            updateContactData(elapsedTime) {
+                const params = this.getInputValues();
+                const nodules = this.calculateNodulePositions(params);
+                const resolution = this.contactData.length;
+                
+                // Calculate current rotations
+                const brushRotation = (params.brushSpeed * elapsedTime / 60) * 2 * Math.PI;
+                const waferRotation = (params.waferSpeed * elapsedTime / 60) * 2 * Math.PI;
+                
+                const centerX = this.animationCanvas.width / 2;
+                const centerY = this.animationCanvas.height / 2;
+                const waferRadius = Math.min(centerX, centerY) - 10;
+                const waferDiameterMM = params.waferDiameter;
+                
+                // For each nodule, check contact with wafer
+                nodules.forEach(nodule => {
+                    // Skip disabled nodules
+                    const noduleId = `${nodule.row}-${nodule.index}`;
+                    if (this.selectedNodules.has(noduleId)) {
+                        return; // Skip this nodule
+                    }
+                    
+                    const currentAngle = nodule.angle + brushRotation;
+                    const brushRadius = params.brushDiameter / 2;
+                    
+                    // Calculate nodule position in 3D space
+                    const noduleCircumX = Math.cos(currentAngle) * brushRadius; // radial position on brush
+                    const noduleCircumY = Math.sin(currentAngle) * brushRadius; // vertical position relative to brush center
+                    const noduleAxialPos = nodule.axialPos; // position along brush length
+                    
+                    // Check if nodule is at bottom of brush (making contact with wafer)
+                    // Assuming brush center is at height = brushRadius above wafer
+                    const contactThreshold = brushRadius - params.noduleDiameter / 2;
+                    
+                    if (noduleCircumY <= -contactThreshold) {
+                        // Check if this nodule can make contact based on brush profile and compression
+                        if (!this.canNoduleContact(nodule, params)) {
+                            return; // Skip this nodule - it's not compressed enough to contact
+                        }
+                        
+                        // Nodule is making contact with wafer
+                        // Map brush axial position to wafer radial distance
+                        // Brush spans from center to edge of wafer
+                        const brushCenter = params.brushLength / 2;
+                        const distanceFromBrushCenter = noduleAxialPos - brushCenter;
+                        const waferRadialDistance = Math.abs(distanceFromBrushCenter);
+                        
+                        // Only consider contact if within wafer radius
+                        if (waferRadialDistance <= waferDiameterMM / 2) {
+                            // Calculate wafer surface position considering wafer rotation
+                            const waferAngle = waferRotation + (distanceFromBrushCenter > 0 ? 0 : Math.PI);
+                            
+                            // Convert to canvas coordinates
+                            const canvasRadius = (waferRadialDistance / (waferDiameterMM / 2)) * waferRadius;
+                            const canvasX = centerX + canvasRadius * Math.cos(waferAngle);
+                            const canvasY = centerY + canvasRadius * Math.sin(waferAngle);
+                            
+                            // Update contact data with broader contact area
+                            const contactRadius = Math.max(1, (params.noduleDiameter / waferDiameterMM) * waferRadius);
+                            
+                            for (let dx = -contactRadius; dx <= contactRadius; dx++) {
+                                for (let dy = -contactRadius; dy <= contactRadius; dy++) {
+                                    if (dx*dx + dy*dy <= contactRadius*contactRadius) {
+                                        const contactX = canvasX + dx;
+                                        const contactY = canvasY + dy;
+                                        
+                                        const gridX = Math.floor((contactX / this.animationCanvas.width) * resolution);
+                                        const gridY = Math.floor((contactY / this.animationCanvas.height) * resolution);
+                                        
+                                        if (gridX >= 0 && gridX < resolution && gridY >= 0 && gridY < resolution) {
+                                            this.contactData[gridX][gridY] += 0.2; // Increased increment for visibility
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            stopAnimation() {
+                this.isAnimating = false;
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
+                }
+                
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('animationStatus').textContent = 'Simulation stopped';
+            }
+            
+            clearAndReset() {
+                this.stopAnimation();
+                this.selectedNodules.clear(); // Reset selected nodules
+                this.updateBrushVisualization();
+                this.initializeContactMap();
+                document.getElementById('animationStatus').textContent = 'Ready to simulate';
+            }
+            
+            clearHeatMap() {
+                this.stopAnimation();
+                this.initializeContactMap();
+                document.getElementById('animationStatus').textContent = 'Heat map cleared - Ready to simulate';
+            }
+            
+            clearSelectedNodules() {
+                this.selectedNodules.clear();
+                this.updateBrushVisualization();
+                document.getElementById('animationStatus').textContent = 'Selected nodules cleared - All nodules active';
+            }
+            
+            showNonContactedAreas() {
+                this.stopAnimation();
+                
+                const ctx = this.animationCtx;
+                const canvas = this.animationCanvas;
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const waferRadius = Math.min(centerX, centerY) - 10;
+                const resolution = this.contactData.length;
+                
+                // Clear canvas with white background
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Fill entire wafer area with white
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, waferRadius, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Draw non-contacted areas in black
+                for (let i = 0; i < resolution; i++) {
+                    for (let j = 0; j < resolution; j++) {
+                        const x = (i / resolution) * canvas.width;
+                        const y = (j / resolution) * canvas.height;
+                        
+                        // Check if point is within wafer circle
+                        const dx = x - centerX;
+                        const dy = y - centerY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance <= waferRadius) {
+                            const contactValue = this.contactData[i][j];
+                            
+                            // If no contact detected, draw black pixel
+                            if (contactValue === 0) {
+                                ctx.fillStyle = 'black';
+                                const pixelSize = canvas.width / resolution;
+                                ctx.fillRect(x - pixelSize/2, y - pixelSize/2, pixelSize, pixelSize);
+                            }
+                        }
+                    }
+                }
+                
+                // Draw wafer outline
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, waferRadius, 0, 2 * Math.PI);
+                ctx.stroke();
+                
+                document.getElementById('animationStatus').textContent = 'Showing non-contacted areas in black';
+            }
+            
+            showLowContactAreas() {
+                this.stopAnimation();
+                
+                const ctx = this.animationCtx;
+                const canvas = this.animationCanvas;
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const waferRadius = Math.min(centerX, centerY) - 10;
+                const resolution = this.contactData.length;
+                
+                // Clear canvas with white background
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Fill entire wafer area with white
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, waferRadius, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Define low contact threshold (adjust this value as needed)
+                const lowContactThreshold = 3; // Contact values below this are considered "low"
+                
+                // Draw areas with no contact or low contact
+                for (let i = 0; i < resolution; i++) {
+                    for (let j = 0; j < resolution; j++) {
+                        const x = (i / resolution) * canvas.width;
+                        const y = (j / resolution) * canvas.height;
+                        
+                        // Check if point is within wafer circle
+                        const dx = x - centerX;
+                        const dy = y - centerY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance <= waferRadius) {
+                            const contactValue = this.contactData[i][j];
+                            
+                            // Color based on contact level
+                            let fillColor = null;
+                            if (contactValue === 0) {
+                                // No contact - black
+                                fillColor = 'black';
+                            } else if (contactValue <= lowContactThreshold) {
+                                // Low contact - grey
+                                fillColor = '#808080';
+                            }
+                            
+                            if (fillColor) {
+                                ctx.fillStyle = fillColor;
+                                const pixelSize = canvas.width / resolution;
+                                ctx.fillRect(x - pixelSize/2, y - pixelSize/2, pixelSize, pixelSize);
+                            }
+                        }
+                    }
+                }
+                
+                // Draw wafer outline
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, waferRadius, 0, 2 * Math.PI);
+                ctx.stroke();
+                
+                // Add legend for the new visualization
+                ctx.fillStyle = '#333';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'left';
+                
+                // Black square for no contact
+                ctx.fillStyle = 'black';
+                ctx.fillRect(10, 10, 15, 15);
+                ctx.fillStyle = '#333';
+                ctx.fillText('No Contact', 30, 22);
+                
+                // Dark red square for low contact
+                ctx.fillStyle = '#808080';
+                ctx.fillRect(10, 30, 15, 15);
+                ctx.fillStyle = '#333';
+                ctx.fillText('Low Contact', 30, 42);
+                
+                // White square for adequate contact
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = '#333';
+                ctx.strokeRect(10, 50, 15, 15);
+                ctx.fillStyle = '#333';
+                ctx.fillText('Adequate Contact', 30, 62);
+                
+                document.getElementById('animationStatus').textContent = 'Showing low/no contact areas (Black = No contact, Grey = Low contact)';
+            }
+            
+            handleBrushCanvasClick(event) {
+                const rect = this.brushCanvas.getBoundingClientRect();
+                const clickX = event.clientX - rect.left;
+                const clickY = event.clientY - rect.top;
+                
+                // Check if click hit any nodule
+                this.currentNodules.forEach(noduleData => {
+                    const distance = Math.sqrt(
+                        Math.pow(clickX - noduleData.x, 2) + 
+                        Math.pow(clickY - noduleData.y, 2)
+                    );
+                    
+                    if (distance <= noduleData.radius) {
+                        // Toggle nodule selection
+                        const noduleId = noduleData.id;
+                        if (this.selectedNodules.has(noduleId)) {
+                            this.selectedNodules.delete(noduleId);
+                            console.log(`Reactivated nodule ${noduleId}`);
+                        } else {
+                            this.selectedNodules.add(noduleId);
+                            console.log(`Disabled nodule ${noduleId}`);
+                        }
+                        
+                        // Redraw brush visualization
+                        this.updateBrushVisualization();
+                        
+                        // Reset contact map if not animating
+                        if (!this.isAnimating) {
+                            this.initializeContactMap();
+                        }
+                        
+                        // Only process the first clicked nodule
+                        return;
+                    }
+                });
+            }
+            
+            exportConfiguration() {
+                const params = this.getInputValues();
+                const nodules = this.calculateNodulePositions(params);
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                
+                // Create configuration text content
+                let configText = `Brush-Wafer Contact Simulator Configuration\n`;
+                configText += `Export Date: ${new Date().toLocaleString()}\n`;
+                configText += `${"=".repeat(50)}\n\n`;
+                
+                configText += `BRUSH PROPERTIES:\n`;
+                configText += `Length: ${params.brushLength} mm\n`;
+                configText += `Diameter: ${params.brushDiameter} mm\n`;
+                configText += `Circumference: ${(Math.PI * params.brushDiameter).toFixed(2)} mm\n`;
+                configText += `Speed: ${params.brushSpeed} RPM\n\n`;
+                
+                configText += `WAFER PROPERTIES:\n`;
+                configText += `Diameter: ${params.waferDiameter} mm\n`;
+                configText += `Speed: ${params.waferSpeed} RPM\n\n`;
+                
+                configText += `NODULE CONFIGURATION:\n`;
+                configText += `Rows: ${params.noduleRows}\n`;
+                configText += `Nodules per Row: ${params.nodulesPerRow}\n`;
+                configText += `Pitch: ${params.nodulePitch} mm\n`;
+                configText += `Diameter: ${params.noduleDiameter} mm\n`;
+                configText += `Odd Rows Start: ${params.noduleStartOdd} mm\n`;
+                configText += `Even Rows Start: ${params.noduleStartEven} mm\n`;
+                configText += `Total Nodules: ${nodules.length}\n`;
+                configText += `Active Nodules: ${nodules.length - this.selectedNodules.size}\n`;
+                configText += `Disabled Nodules: ${this.selectedNodules.size}\n\n`;
+                
+                // Add disabled nodules list if any exist
+                if (this.selectedNodules.size > 0) {
+                    configText += `DISABLED NODULES:\n`;
+                    const disabledList = Array.from(this.selectedNodules).sort();
+                    disabledList.forEach(noduleId => {
+                        const [row, index] = noduleId.split('-');
+                        configText += `Row ${parseInt(row) + 1}, Nodule ${parseInt(index) + 1} (ID: ${noduleId})\n`;
+                    });
+                    configText += `\n`;
+                }
+                
+                configText += `SIMULATION SETTINGS:\n`;
+                configText += `Data Density: ${params.dataDensity}\n`;
+                configText += `Process Time: ${params.processTime} seconds\n\n`;
+                
+                configText += `CALCULATED VALUES:\n`;
+                configText += `Row Offset: ${Math.abs(params.noduleStartEven - params.noduleStartOdd).toFixed(1)} mm\n`;
+                configText += `Brush Coverage Length: ${params.noduleStartOdd + (params.nodulesPerRow - 1) * params.nodulePitch} mm\n`;
+                configText += `Nodule Density: ${(nodules.length / (Math.PI * params.brushDiameter * params.brushLength) * 1000).toFixed(2)} nodules/cm²\n\n`;
+                
+                configText += `DETAILED NODULE POSITIONS:\n`;
+                configText += `Row\tIndex\tAxial Pos (mm)\tCircum Pos (mm)\tAngle (rad)\tStatus\n`;
+                configText += `${"=".repeat(70)}\n`;
+                
+                nodules.forEach(nodule => {
+                    const noduleId = `${nodule.row}-${nodule.index}`;
+                    const status = this.selectedNodules.has(noduleId) ? 'DISABLED' : 'ACTIVE';
+                    configText += `${nodule.row + 1}\t${nodule.index + 1}\t${nodule.axialPos.toFixed(2)}\t\t${nodule.circumPos.toFixed(2)}\t\t${nodule.angle.toFixed(3)}\t${status}\n`;
+                });
+                
+                // Create and download file
+                const blob = new Blob([configText], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `brush_config_${timestamp}.txt`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+                
+                // Show confirmation
+                const originalText = document.getElementById('exportBtn').textContent;
+                document.getElementById('exportBtn').textContent = 'Exported!';
+                document.getElementById('exportBtn').style.background = '#4CAF50';
+                setTimeout(() => {
+                    document.getElementById('exportBtn').textContent = originalText;
+                    document.getElementById('exportBtn').style.background = '#2196F3';
+                }, 2000);
+            }
+        }
+        
+        // Initialize the simulator when page loads
+        window.addEventListener('load', () => {
+            new BrushWaferSimulator();
+        });
+    </script>
+</body>
+</html>
+                
