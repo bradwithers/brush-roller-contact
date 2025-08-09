@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+    <title>Brush-Wafer Contact Simulator</title>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Brush-Wafer Contact Simulator</h1>
+            <p>Model the contact patterns between a rotating cylindrical brush and wafer</p>
+        </div>
+        
+        <div class="controls">
+            <div class="control-grid">
+                <div class="control-group">
+                    <h3>Brush Properties</h3>
+                    <div class="input-row">
+                        <label>Length (mm):</label>
+                        <input type="number" id="brushLength" value="300" min="10" max="500">
+                    </div>
+                    <div class="input-row">
+                        <label>Diameter (mm):</label>
+                        <input type="number" id="brushDiameter" value="70" min="5" max="200">
+                    </div>
+                    <div class="input-row">
+                        <label>Speed (RPM):</label>
+                        <input type="number" id="brushSpeed" value="400" min="1" max="1000">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Wafer Properties</h3>
+                    <div class="input-row">
+                        <label>Speed (RPM):</label>
+                        <input type="number" id="waferSpeed" value="47" min="1" max="500">
+                    </div>
+                    <div class="input-row">
+                        <label>Diameter (mm):</label>
+                        <input type="number" id="waferDiameter" value="300" min="50" max="400">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Nodule Configuration</h3>
+                    <div class="input-row">
+                        <label>Rows:</label>
+                        <input type="number" id="noduleRows" value="8" min="1" max="20">
+                    </div>
+                    <div class="input-row">
+                        <label>Per Row:</label>
+                        <input type="number" id="nodulesPerRow" value="20" min="1" max="30">
+                    </div>
+                    <div class="input-row">
+                        <label>Pitch (mm):</label>
+                        <input type="number" id="nodulePitch" value="16" min="1" max="50">
+                    </div>
+                    <div class="input-row">
+                        <label>Diameter (mm):</label>
+                        <input type="number" id="noduleDiameter" value="8" min="0.5" max="10" step="0.1">
+                    </div>
+                    <div class="input-row">
+                        <label>Odd Rows Start (mm):</label>
+                        <input type="number" id="noduleStartOdd" value="0" min="0" max="50">
+                    </div>
+                    <div class="input-row">
+                        <label>Even Rows Start (mm):</label>
+                        <input type="number" id="noduleStartEven" value="8" min="0" max="50">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Brush Profile</h3>
+                    <div class="input-row">
+                        <label>Contour:</label>
+                        <select id="brushContour">
+                            <option value="flat" selected>Flat</option>
+                            <option value="concave">Concave</option>
+                            <option value="convex">Convex</option>
+                            <option value="taperLeft">Taper L→R</option>
+                            <option value="taperRight">Taper R→L</option>
+                            <option value="random">Random</option>
+                        </select>
+                    </div>
+                    <div class="input-row">
+                        <label>Contour Depth (mm):</label>
+                        <input type="number" id="contourDepth" value="0" min="0" max="10" step="0.1">
+                    </div>
+                    <div class="input-row">
+                        <label>Compression (mm):</label>
+                        <input type="number" id="brushCompression" value="0" min="0" max="20" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3>Simulation Settings</h3>
+                    <div class="input-row">
+                        <label>Data Density:</label>
+                        <select id="dataDensity">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="input-row">
+                        <label>Process Time (s):</label>
+                        <input type="number" id="processTime" value="10" min="1" max="60">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-primary" id="startBtn">Start Animation</button>
+                <button class="btn-danger" id="stopBtn">Stop Animation</button>
+                <button class="btn-secondary" id="clearBtn">Clear & Reset</button>
+                <button class="btn-secondary" id="clearHeatMapBtn">Clear Heat Map</button>
+                <button class="btn-secondary" id="clearNodulesBtn">Clear Selected Nodules</button>
+                <button class="btn-secondary" id="reverseMapBtn">Show Non-Contacted Areas</button>
+                <button class="btn-secondary" id="lowContactMapBtn">Show Low/No Contact Areas</button>
+                <button class="btn-secondary" id="exportBtn">Export Configuration</button>
+            </div>
+        </div>
+        
+        <div class="display-area">
+            <div class="animation-panel">
+                <div class="panel-title">Brush Configuration</div>
+                <canvas id="brushCanvas" width="400" height="300"></canvas>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: white; border: 2px solid #333;"></div>
+                        <span>Contacting Nodules</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffcccc; border: 2px solid #ff6666;"></div>
+                        <span>Non-Contacting</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: black;"></div>
+                        <span>Disabled Nodules</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: lightgray;"></div>
+                        <span>Brush Surface</span>
+                    </div>
+                </div>
+                
+                <!-- Nodule Detail Diagram -->
+                <div style="margin-top: 15px;">
+                    <div style="text-align: center; font-weight: 600; color: #333; margin-bottom: 10px; font-size: 14px;">
+                        Nodule Detail
+                    </div>
+                    <canvas id="detailCanvas" width="400" height="120" style="border: 1px solid #ddd;"></canvas>
+                    
+                    <!-- Gap Analysis Warning -->
+                    <div id="gapAnalysis" style="margin-top: 10px; text-align: center; min-height: 40px;">
+                        <div id="gapWarning" style="font-weight: bold; font-size: 11px; margin-bottom: 4px;"></div>
+                        <div id="gapRecommendation" style="font-size: 10px; color: #666;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="animation-panel">
+                <div class="panel-title">Contact Heat Map</div>
+                <canvas id="animationCanvas" width="400" height="400"></canvas>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgb(60,60,60);"></div>
+                        <span>No Contact</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgb(50,200,25);"></div>
+                        <span>Low Contact</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgb(200,255,0);"></div>
+                        <span>Medium Contact</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgb(255,155,0);"></div>
+                        <span>High Contact</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgb(255,50,25);"></div>
+                        <span>Very High Contact</span>
+                    </div>
+                </div>
+                <div class="status" id="animationStatus">Ready to simulate</div>
+                
+                <!-- Brush Profile Visualization -->
+                <div style="margin-top: 15px;">
+                    <div style="text-align: center; font-weight: 600; color: #333; margin-bottom: 10px; font-size: 14px;">
+                        Brush Profile
+                    </div>
+                    <canvas id="profileCanvas" width="400" height="100" style="border: 1px solid #ddd; border-radius: 4px;"></canvas>
+                    <div style="text-align: center; margin-top: 8px; font-size: 12px; color: #666;">
+                        <span id="profileInfo">Flat Profile</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; padding: 15px; border-top: 1px solid #e0e0e0; background: #f8f9fa; color: #666; font-size: 12px; margin-top: 0;">
+            © 2025 LycheeByte LLC
+        </div>
+    </div>
+</body>
+</html>
